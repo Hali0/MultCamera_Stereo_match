@@ -1,4 +1,5 @@
-//双目匹配程序
+//双目匹配并输出深度图
+//版本:Version 1.2
 #include "opencv2/calib3d/calib3d.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
 #include "opencv2/imgcodecs.hpp"
@@ -14,14 +15,19 @@ using namespace std;
 
 
 int main()
-{
+{   
+	//读取yml双目匹配文件
 	const char* intrinsic_filename = "data/intrinsics.yml";
 	const char* extrinsic_filename = "data/extrinsics.yml";
 	
 	Mat left, right;
-	VideoCapture capleft(1); // 打开左摄像头
-	VideoCapture capright(0);  //打开右摄像头
+	//打开左摄像头
+	VideoCapture capleft(1);
+	//打开右摄像头
+	VideoCapture capright(0);
+
 	cout << "Press Q to quit the program" << endl;
+	
 	for (;;)
 	{
 		capleft >> left;
@@ -30,14 +36,11 @@ int main()
 		capright >> right;
 		imshow("Right Capture", right);
 
-		if (cvWaitKey(10) == 'q')
-			break;
-	
-		//设置匹配模式STEREO_BM = 0, STEREO_SGBM = 1, STEREO_HH = 2, STEREO_VAR = 3
+		//设置匹配模式:STEREO_BM = 0, STEREO_SGBM = 1, STEREO_HH = 2, STEREO_VAR = 3
 		int alg = 1;
 
 		//匹配参数
-		int SADWindowSize = 5, numberOfDisparities = 256;
+		int SADWindowSize = 3, numberOfDisparities = 128;
 		////////////////////5////////////////////////256//////
 
 		bool no_display = false;
@@ -113,7 +116,7 @@ int main()
 
 		//disp = dispp.colRange(numberOfDisparities, img1p.cols);
 
-			disp.convertTo(disp8, CV_8U, 255 / (numberOfDisparities*16.));
+		disp.convertTo(disp8, CV_8U, 255 / (numberOfDisparities*16.));
 		imshow("Deepwindow",disp8);
 
 		//以下函数将灰度图显示为伪彩色图
@@ -165,6 +168,9 @@ int main()
 		//}
 		//namedWindow("img_ rainbowcolor");
 		//imshow("img_ rainbowcolor", img_color);
+
+		if (cvWaitKey(10) == 'q')
+			break;
 	}
 	return 0;
 }
