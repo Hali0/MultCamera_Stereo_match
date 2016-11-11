@@ -3,5 +3,7 @@ d:\work\opencv\opencv3.0\opencv\build\include\opencv2\core\mat.hpp(1965): warnin
 d:\work\opencv\opencv3.0\opencv\build\include\opencv2\core\persistence.hpp : warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
 d:\work\opencv\opencv3.0\opencv\build\include\opencv2\core\utility.hpp : warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
 d:\work\opencv\opencv3.0\opencv\build\include\opencv2\core\utility.hpp : warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
+d:\work\projects\multcamera\stereomatch\multcamera_stereo_match\stereo_match\stereo_match.cpp(195): warning C4244: “参数”: 从“float”转换到“int”，可能丢失数据
+d:\work\projects\multcamera\stereomatch\multcamera_stereo_match\stereo_match\stereo_match.cpp(197): warning C4244: “参数”: 从“float”转换到“int”，可能丢失数据
   Stereo_match.vcxproj -> D:\Work\Projects\multcamera\Stereomatch\MultCamera_Stereo_match\Stereo_match\x64\Debug\Stereo_match.exe
   Stereo_match.vcxproj -> D:\Work\Projects\multcamera\Stereomatch\MultCamera_Stereo_match\Stereo_match\x64\Debug\Stereo_match.pdb (Partial PDB)
