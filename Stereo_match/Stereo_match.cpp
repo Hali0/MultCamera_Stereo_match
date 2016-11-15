@@ -1,6 +1,7 @@
 //双目匹配
-//版本:Version 2.0
+//版本:Version 3.0
 //利用双目标定文件对双目摄像头所采得的画面进行匹配
+
 #include "opencv2/calib3d/calib3d.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
 #include "opencv2/imgcodecs.hpp"
@@ -17,34 +18,32 @@
 using namespace cv;
 using namespace std;
 
+static void saveXYZ(const char* filename, const Mat& mat)
+{
+	const double max_z = 1.0e4;
+	FILE* fp = fopen(filename, "wt");
+	for (int y = 0; y < mat.rows; y++)
+	{
+		for (int x = 0; x < mat.cols; x++)
+		{
+			Vec3f point = mat.at<Vec3f>(y, x);
+			if (fabs(point[2] - max_z) < FLT_EPSILON || fabs(point[2]) > max_z) continue;
+			fprintf(fp, "%f %f %f\n", point[0], point[1], point[2]);
+		}
+	}
+	fclose(fp);
+}
+
 int main()
 {   
 	//读取yml双目匹配文件
 	const char* intrinsic_filename = "data/intrinsics.yml";
 	const char* extrinsic_filename = "data/extrinsics.yml";
-	
-	Mat canvas;
-	int w, h;
-	w = 320;
-	h = 240;
-	canvas.create(h, w * 2, CV_8UC3);
-	
-	//设置匹配模式:STEREO_BM = 0, STEREO_SGBM = 1, STEREO_HH = 2, STEREO_VAR = 3
-	int alg = 1;
-
-	//匹配参数
-	int SADWindowSize = 3, numberOfDisparities = 128;
-	////////////////////5////////////////////////256//////
-	bool no_display = false;
-	float scale = 1.0;
-
-	Ptr<StereoSGBM> sgbm = StereoSGBM::create(0, 16, 3);
-
-	int color_mode = -1;
-
 	Rect roi1, roi2;
 	Mat Q;
-	// 读取标定参数
+	float scale = 0.5;
+	
+	// 从data文件中读取标定参数
 	FileStorage fs(intrinsic_filename, FileStorage::READ);
 	Mat M1, D1, M2, D2;
 	fs["cameraMatrixL"] >> M1;
@@ -58,6 +57,25 @@ int main()
 	Mat R, T, R1, P1, R2, P2;
 	fs["R"] >> R;
 	fs["T"] >> T;
+	
+	//绘制窗口
+	Mat canvas;
+	int w, h;
+	w = 320;
+	h = 240;
+	canvas.create(h, w * 2, CV_8UC3);
+	
+	Mat disp, disp8, img1, img2;
+	//设置匹配模式:STEREO_BM = 0, STEREO_SGBM = 1, STEREO_HH = 2, STEREO_VAR = 3
+	int alg = 1;
+
+	//匹配参数
+	int SADWindowSize = 3, numberOfDisparities = 128;
+	////////////////////5////////////////////////256/
+	bool no_display = false;
+	
+
+	Ptr<StereoSGBM> sgbm = StereoSGBM::create(0, 16, 3);
 
 	Mat left, right;
 	//打开左摄像头
@@ -77,16 +95,17 @@ int main()
 		Mat canvasPart = canvas(Rect(0, 0, w, h));
 		//把图像缩放到跟canvasPart一样大小
 		resize(left, canvasPart, canvasPart.size(), 0, 0, INTER_AREA);
-		resize(left, left, canvasPart.size(), 0, 0, INTER_AREA);
+		
 		//右上图像画到画布上
 		//获得画布的另一部分
 		canvasPart = canvas(Rect(w, 0, w, h));
 		resize(right, canvasPart, canvasPart.size(), 0, 0, INTER_LINEAR);
-		resize(right, right, canvasPart.size(), 0, 0, INTER_LINEAR);
+		
 		imshow("Capture", canvas);
-
-		Mat img1 = left;
-		Mat img2 = right;
+		
+		resize(left, img1, left.size()/2, 0, 0, INTER_AREA);
+		resize(right, img2, right.size()/2, 0, 0, INTER_LINEAR);
+		
 		Size img_size = img1.size();
 		
 		//对两个摄像头所采得的画面进行矫正
@@ -122,7 +141,6 @@ int main()
 		sgbm->setDisp12MaxDiff(1);
 		sgbm->setMode(alg == 2 ? StereoSGBM::MODE_HH : StereoSGBM::MODE_SGBM);
 
-		Mat disp, disp8;
 
 		//显示运行时间
 		int64 t = getTickCount();
@@ -131,7 +149,6 @@ int main()
 		cout << "Time elapsed: " << t * 1000 / getTickFrequency() << "ms" << endl;
 
 		//disp = dispp.colRange(numberOfDisparities, img1p.cols);
-
 		disp.convertTo(disp8, CV_8U, 255 / (numberOfDisparities*16.));
 		resize(disp8, disp8, canvasPart.size()*2, 0, 0, INTER_LINEAR);
 		imshow("Deepwindow",disp8);
@@ -185,11 +202,17 @@ int main()
 		//}
 		//namedWindow("img_ rainbowcolor");
 		//imshow("img_ rainbowcolor", img_color);
+		if (cvWaitKey(10) == 'w') 
+		{
 
+			printf("storing the point cloud...");
+			Mat xyz;
+			reprojectImageTo3D(disp, xyz, Q, true);
+			saveXYZ("pointcloud.yml", xyz);
+			printf("\n");
+		};
 		if (cvWaitKey(10) == 'q')
 			break;
 	}
 	return 0;
 }
-
-//putText(Disp_Img, "Left Capture", cv::Point(200, 20), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255, 255, 255));
