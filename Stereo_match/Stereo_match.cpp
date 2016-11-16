@@ -1,6 +1,6 @@
 //双目匹配
-//版本:Version 3.0
-//利用双目标定文件对双目摄像头所采得的画面进行匹配
+//版本:Version 3.1
+//利用双目标定文件对双目摄像头所采得的画面进行匹配并能够输出图像世界坐标
 
 #include "opencv2/calib3d/calib3d.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
